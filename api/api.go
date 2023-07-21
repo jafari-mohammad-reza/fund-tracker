@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/jafari-mohammad-reza/fund-tracker/api/routes"
 	"os"
 	"time"
 )
@@ -36,7 +37,5 @@ func NewServer() {
 func setupRoutes(app *fiber.App) {
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
-	v1.Get("/", func(ctx *fiber.Ctx) error {
-		return ctx.SendStatus(200)
-	})
+	v1.Use("/funds", routes.FundsRoute)
 }

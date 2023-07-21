@@ -1,3 +1,3 @@
 package structs
 
-type Fund type {}
+//type Fund type {}
