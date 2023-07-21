@@ -1,6 +1,8 @@
 package data
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/redis/go-redis/v9"
 	"os"
@@ -36,4 +38,25 @@ func CloseRedisClient() {
 }
 func GetRedisClient() *redis.Client {
 	return redisClient
+}
+func SetValue[T any](ctx context.Context, client *redis.Client, key string, value T, duration time.Duration) error {
+	jsonValue, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+	client.Set(ctx, key, jsonValue, duration)
+	return nil
+}
+
+func GetValue[T any](ctx context.Context, client *redis.Client, key string) (T, error) {
+	dest := *new(T)
+	cachedData, err := client.Get(ctx, key).Result()
+	if err != nil {
+		return dest, err
+	}
+	err = json.Unmarshal([]byte(cachedData), &dest)
+	if err != nil {
+		return dest, err
+	}
+	return dest, nil
 }
