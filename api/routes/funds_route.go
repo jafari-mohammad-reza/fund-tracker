@@ -5,12 +5,13 @@ import (
 	"github.com/jafari-mohammad-reza/fund-tracker/api/controllers"
 )
 
-func FundsRoute(group *fiber.Group) {
+func FundsRoute(router fiber.Router) {
 	controller := controllers.NewFuncController()
+	funds := router.Group("/funds")
 	// Return all funds with compare date of 1
-	group.Get("/", controller.GetFunds)
+	funds.Get("/", controller.GetFunds)
 	// Return all funds managers with complete data
-	group.Get("/managers", controller.GetManagers)
+	funds.Get("/managers", controller.GetManagers)
 	// Return given regNo fund with cancel and issue count and efficiency chart and portfo data
-	group.Get("/fund/:regNo", controller.GetFundInfo)
+	funds.Get("/fund/:regNo", controller.GetFundInfo)
 }
