@@ -7,16 +7,20 @@ import (
 )
 
 type FundService struct {
-	redisClient *redis.Client
+	redisClient       *redis.Client
+	apiFetcherService *ApiFetcherService
 }
 
 func NewFundService() *FundService {
 	redisClient := data.GetRedisClient()
+	apiFetcherService := NewApiFetcher()
 	return &FundService{
-		redisClient: redisClient,
+		redisClient:       redisClient,
+		apiFetcherService: apiFetcherService,
 	}
 }
 
 func (service *FundService) GetFunds() (*structs.Fund, error) {
+
 	return nil, nil
 }
