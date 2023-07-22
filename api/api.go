@@ -5,6 +5,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
 	"github.com/jafari-mohammad-reza/fund-tracker/api/routes"
+	
+	_ "github.com/jafari-mohammad-reza/fund-tracker/docs"
 	"os"
 	"time"
 )
@@ -53,9 +55,5 @@ func setupRoutes(app *fiber.App) {
 // @host localhost:5000
 // @BasePath /
 func setupSwagger(app *fiber.App) {
-	app.Get("/api-docs/*", swagger.New(swagger.Config{
-		InstanceName: "Fund Tracker",
-		Title:        "Fund Tracker",
-		URL:          os.Getenv("APP_URL"),
-	}))
+	app.Get("/swagger/*", swagger.HandlerDefault)
 }

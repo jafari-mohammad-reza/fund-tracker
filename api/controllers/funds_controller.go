@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jafari-mohammad-reza/fund-tracker/api/services"
+	"github.com/jafari-mohammad-reza/fund-tracker/pkg/structs"
 )
 
 type FundController struct {
@@ -17,6 +18,11 @@ func NewFuncController() *FundController {
 }
 
 func (controller *FundController) GetFunds(ctx *fiber.Ctx) error {
+	funds, err := controller.service.GetFunds()
+	if err != nil {
+		ctx.Status(500).JSONP(structs.NewJsonResponse(500, false, "failed to fetch funds"))
+	}
+	ctx.Status(200).JSONP(structs.NewJsonResponse(200, true, funds))
 	return nil
 }
 

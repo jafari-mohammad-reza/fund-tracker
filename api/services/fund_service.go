@@ -2,6 +2,7 @@ package services
 
 import (
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/data"
+	"github.com/jafari-mohammad-reza/fund-tracker/pkg/structs"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -14,4 +15,8 @@ func NewFundService() *FundService {
 	return &FundService{
 		redisClient: redisClient,
 	}
+}
+
+func (service *FundService) GetFunds() (*structs.Fund, error) {
+	return nil, nil
 }
