@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/swagger"
 	"github.com/jafari-mohammad-reza/fund-tracker/api/routes"
 	"os"
 	"time"
@@ -25,6 +26,7 @@ func NewServer() {
 		},
 	})
 	setupRoutes(app)
+	setupSwagger(app)
 	app.Use(func(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusNotFound).SendString("Route not available!")
 	})
@@ -41,4 +43,19 @@ func setupRoutes(app *fiber.App) {
 		return ctx.SendStatus(200)
 	})
 	routes.FundsRoute(v1)
+}
+
+// @title Fund Tracker
+// @version 1.0
+// @description fund tracker api documentation
+// @contact.name mohammadreza jafari
+// @contact.email mohammadrezajafari.dev@gmail.com
+// @host localhost:5000
+// @BasePath /
+func setupSwagger(app *fiber.App) {
+	app.Get("/api-docs/*", swagger.New(swagger.Config{
+		InstanceName: "Fund Tracker",
+		Title:        "Fund Tracker",
+		URL:          os.Getenv("APP_URL"),
+	}))
 }

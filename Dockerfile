@@ -11,9 +11,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go get github.com/cespare/reflex
-RUN go install github.com/cespare/reflex@latest
-
+RUN go get -u github.com/cespare/reflex
 EXPOSE 5000
 
 ENTRYPOINT ["make"]
