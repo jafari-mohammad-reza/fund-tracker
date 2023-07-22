@@ -3,4 +3,4 @@ build:
 run: build
 	@./dist/bot
 dev:
-	@/go/bin/reflex -r '\.go$$' -s -- sh -c "go build -buildvcs=false -o ./dist/api && ./dist/api"
+	@reflex -r '\.go$$' -s -- sh -c "go build -buildvcs=false -o ./dist/api && ./dist/api"
