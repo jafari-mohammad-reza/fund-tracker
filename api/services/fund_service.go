@@ -50,7 +50,7 @@ func findRank(items []structs.Fund, regNo string) int {
 	}
 	return len(items)
 }
-func (service *FundService) GetFunds() (*[]structs.CalculatedFund, error) {
+func (service *FundService) GetFunds(compareDate *int) (*[]structs.CalculatedFund, error) {
 	baseUrl, err := url.Parse("https://fund.fipiran.ir/api/v1/fund/fundcompare")
 	if err != nil {
 		log.Println("Failed to parse URL: ", err.Error())
@@ -61,8 +61,13 @@ func (service *FundService) GetFunds() (*[]structs.CalculatedFund, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	date := url.QueryEscape(time.Now().AddDate(0, 0, -7).Format("2006-01-02"))
+	var comparisionDate int
+	if compareDate != nil {
+		comparisionDate = *compareDate
+	} else {
+		comparisionDate = 7
+	}
+	date := url.QueryEscape(time.Now().AddDate(0, 0, -comparisionDate).Format("2006-01-02"))
 	params := url.Values{}
 	params.Add("date", date)
 	baseUrl.RawQuery = params.Encode()
@@ -76,14 +81,14 @@ func (service *FundService) GetFunds() (*[]structs.CalculatedFund, error) {
 		previousDayFundsMap[previousDayFunds.RegNo] = previousDayFunds
 	}
 
-	var calculatedFunds []structs.CalculatedFund
+	calculatedFunds := make([]structs.CalculatedFund, 0, len(responseData.Items))
 	for fundsIndex, fund := range responseData.Items {
 		previousDayFunds, ok := previousDayFundsMap[fund.RegNo]
 		if ok {
 			rank := findRank(previousDayResponseData.Items, fund.RegNo)
 			rankDiff := fundsIndex - rank
 			netAssetDiff := math.Ceil(float64(fund.NetAsset - previousDayFunds.NetAsset))
-			netAssetDiffPercent := math.Ceil(float64((fund.NetAsset - previousDayFunds.NetAsset) / 100))
+			netAssetDiffPercent := float64((fund.NetAsset / previousDayFunds.NetAsset) * 100)
 			calculatedFunds = append(calculatedFunds, structs.CalculatedFund{
 				Fund:                fund,
 				Rank:                rank,

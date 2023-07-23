@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jafari-mohammad-reza/fund-tracker/api/services"
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/structs"
+	"strconv"
 )
 
 type FundController struct {
@@ -18,7 +19,19 @@ func NewFuncController() *FundController {
 }
 
 func (controller *FundController) GetFunds(ctx *fiber.Ctx) error {
-	funds, err := controller.service.GetFunds()
+	compareDateString := ctx.Query("compareDate")
+	var compareDate int
+	var err error
+	if compareDateString != "" {
+		compareDate, err = strconv.Atoi(compareDateString)
+		if err != nil {
+			ctx.Status(500).JSON(structs.NewJsonResponse(500, false, "invalid compare date"))
+			return err
+		}
+	} else {
+		compareDate = 7
+	}
+	funds, err := controller.service.GetFunds(&compareDate)
 	if err != nil {
 		ctx.Status(500).JSON(structs.NewJsonResponse(500, false, "failed to fetch funds"))
 		return err
