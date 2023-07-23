@@ -51,8 +51,25 @@ type Fund struct {
 	Commodity                 *float64 `json:"commodity"`
 	FundPublisher             int      `json:"fundPublisher"`
 	FundWatch                 *bool    `json:"fundWatch"`
-	Rank                      *int8    `json:"rank"`
-	RankDiff                  *int8    `json:"RankDiff"`
+	Rank                      *int     `json:"rank"`
+	RankDiff                  *int     `json:"RankDiff"`
 	AumDiff                   *float64 `json:"aumDiff"`
 	AumDiffPercent            *float32 `json:"aumDiff"`
+}
+
+type FipIranResponse struct {
+	Status     int    `json:"status"`
+	Message    string `json:"message"`
+	PageNumber int    `json:"pageNumber"`
+	PageSize   int    `json:"pageSize"`
+	TotalCount int    `json:"totalCount"`
+	Items      []Fund `json:"items"`
+}
+
+type CalculatedFund struct {
+	Fund
+	Rank                int     `json:"rank"`
+	RankDiff            int     `json:"rankDiff"`
+	NetAssetDiff        float64 `json:"netAssetDiff"`
+	NetAssetDiffPercent float64 `json:"netAssetDiffPercent"`
 }

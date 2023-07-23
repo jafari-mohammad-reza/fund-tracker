@@ -20,10 +20,12 @@ func NewFuncController() *FundController {
 func (controller *FundController) GetFunds(ctx *fiber.Ctx) error {
 	funds, err := controller.service.GetFunds()
 	if err != nil {
-		ctx.Status(500).JSONP(structs.NewJsonResponse(500, false, "failed to fetch funds"))
+		ctx.Status(500).JSON(structs.NewJsonResponse(500, false, "failed to fetch funds"))
+		return err
 	}
-	ctx.Status(200).JSONP(structs.NewJsonResponse(200, true, funds))
+	ctx.Status(200).JSON(structs.NewJsonResponse(200, true, funds))
 	return nil
+
 }
 
 func (controller *FundController) GetManagers(ctx *fiber.Ctx) error {

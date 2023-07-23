@@ -48,7 +48,7 @@ func (service *ApiFetcherService) FetchApiBytes(api string, params *string, quer
 			}
 		}
 
-		req, err := http.NewRequest("GET", newUrl.RequestURI(), nil)
+		req, err := http.NewRequest("GET", newUrl.String(), nil)
 		if err != nil {
 			ch <- FetchResult{nil, err}
 			return
