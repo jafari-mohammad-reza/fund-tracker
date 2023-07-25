@@ -2,12 +2,15 @@ package services
 
 import (
 	"encoding/json"
+	"github.com/jafari-mohammad-reza/fund-tracker/api/dto"
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/data"
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/structs"
 	"github.com/redis/go-redis/v9"
 	"log"
 	"math"
 	"net/url"
+	"reflect"
+	"sort"
 	"time"
 )
 
@@ -50,7 +53,7 @@ func findRank(items []structs.Fund, regNo string) int {
 	}
 	return len(items)
 }
-func (service *FundService) GetFunds(compareDate *int) (*[]structs.CalculatedFund, error) {
+func (service *FundService) GetFunds(queryList *dto.FundListQuery) (*[]structs.CalculatedFund, error) {
 	baseUrl, err := url.Parse("https://fund.fipiran.ir/api/v1/fund/fundcompare")
 	if err != nil {
 		log.Println("Failed to parse URL: ", err.Error())
@@ -62,8 +65,8 @@ func (service *FundService) GetFunds(compareDate *int) (*[]structs.CalculatedFun
 		return nil, err
 	}
 	var comparisionDate int
-	if compareDate != nil {
-		comparisionDate = *compareDate
+	if queryList.CompareDate != nil {
+		comparisionDate = *queryList.CompareDate
 	} else {
 		comparisionDate = 7
 	}
@@ -73,22 +76,25 @@ func (service *FundService) GetFunds(compareDate *int) (*[]structs.CalculatedFun
 	baseUrl.RawQuery = params.Encode()
 
 	previousDayResponseData, err := service.fetchFunds(baseUrl.String())
+	sortResponseDataItems(responseData.Items, *queryList.RankBy)
+	sortResponseDataItems(previousDayResponseData.Items, *queryList.RankBy)
 	if err != nil {
 		return nil, err
 	}
-	previousDayFundsMap := make(map[string]structs.Fund)
-	for _, previousDayFunds := range previousDayResponseData.Items {
-		previousDayFundsMap[previousDayFunds.RegNo] = previousDayFunds
+	previousDayFundsMap := make(map[string]int)
+	for i, previousDayFunds := range previousDayResponseData.Items {
+		previousDayFundsMap[previousDayFunds.RegNo] = i
 	}
 
+	// Calculate the funds and ranks using the map instead of linear search
 	calculatedFunds := make([]structs.CalculatedFund, 0, len(responseData.Items))
 	for fundsIndex, fund := range responseData.Items {
-		previousDayFunds, ok := previousDayFundsMap[fund.RegNo]
+		previousDayIndex, ok := previousDayFundsMap[fund.RegNo]
 		if ok {
-			rank := findRank(previousDayResponseData.Items, fund.RegNo)
+			rank := previousDayIndex
 			rankDiff := fundsIndex - rank
-			netAssetDiff := math.Ceil(float64(fund.NetAsset - previousDayFunds.NetAsset))
-			netAssetDiffPercent := float64((fund.NetAsset / previousDayFunds.NetAsset) * 100)
+			netAssetDiff := math.Ceil(float64(fund.NetAsset - previousDayResponseData.Items[previousDayIndex].NetAsset))
+			netAssetDiffPercent := float64((fund.NetAsset / previousDayResponseData.Items[previousDayIndex].NetAsset) * 100)
 			calculatedFunds = append(calculatedFunds, structs.CalculatedFund{
 				Fund:                fund,
 				Rank:                rank,
@@ -100,4 +106,26 @@ func (service *FundService) GetFunds(compareDate *int) (*[]structs.CalculatedFun
 	}
 
 	return &calculatedFunds, nil
+}
+
+func sortResponseDataItems(responseData []structs.Fund, fieldName string) {
+	sort.Slice(responseData, func(i, j int) bool {
+		// Use reflection to get the field value based on the fieldName
+
+		fieldI := reflect.ValueOf(responseData[i]).FieldByName(fieldName)
+		fieldJ := reflect.ValueOf(responseData[j]).FieldByName(fieldName)
+
+		// Compare the field values based on their types
+		switch fieldI.Kind() {
+		case reflect.String:
+			return fieldI.String() < fieldJ.String()
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			return fieldI.Int() < fieldJ.Int()
+		// Add more cases for other types if needed
+		default:
+			// If the field type is not supported for comparison, you might want to handle it accordingly.
+			// For example, return false to maintain the original order.
+			return false
+		}
+	})
 }
