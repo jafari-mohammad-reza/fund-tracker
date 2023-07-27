@@ -1,7 +1,9 @@
 package services
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/jafari-mohammad-reza/fund-tracker/api/dto"
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/data"
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/structs"
@@ -11,6 +13,7 @@ import (
 	"net/url"
 	"reflect"
 	"sort"
+	"strconv"
 	"time"
 )
 
@@ -54,13 +57,29 @@ func findRank(items []structs.Fund, regNo string) int {
 	return len(items)
 }
 func (service *FundService) GetFunds(queryList *dto.FundListQuery) (*[]structs.CalculatedFund, error) {
+
 	baseUrl, err := url.Parse("https://fund.fipiran.ir/api/v1/fund/fundcompare")
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
+
 	if err != nil {
 		log.Println("Failed to parse URL: ", err.Error())
 		return nil, err
 	}
+	fetchFuncWrapper := func() (*structs.FipIranResponse, error) {
+		responseData, err := service.fetchFunds(baseUrl.String())
+		if err != nil {
+			return nil, err
+		}
+		return responseData, nil
+	}
 
-	responseData, err := service.fetchFunds(baseUrl.String())
+	responseData, err := data.GetDataFromCacheOrFetch(
+		fetchFuncWrapper,
+		"fipiran-funds",
+		ctx,
+		service.redisClient,
+	)
+
 	if err != nil {
 		return nil, err
 	}
@@ -74,8 +93,13 @@ func (service *FundService) GetFunds(queryList *dto.FundListQuery) (*[]structs.C
 	params := url.Values{}
 	params.Add("date", date)
 	baseUrl.RawQuery = params.Encode()
-
-	previousDayResponseData, err := service.fetchFunds(baseUrl.String())
+	previousDayResponseData, err := data.GetDataFromCacheOrFetch(
+		fetchFuncWrapper,
+		"fipiran-funds"+"-"+strconv.Itoa(*queryList.CompareDate)+"-"+*queryList.RankBy,
+		ctx,
+		service.redisClient,
+	)
+	go service.redisClient.Set(ctx, fmt.Sprintf("%s-%d", "fipiran-funds", queryList.CompareDate), previousDayResponseData, time.Hour*3)
 	sortResponseDataItems(responseData.Items, *queryList.RankBy)
 	sortResponseDataItems(previousDayResponseData.Items, *queryList.RankBy)
 	if err != nil {
