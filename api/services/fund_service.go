@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/jafari-mohammad-reza/fund-tracker/api/dto"
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/data"
@@ -74,9 +75,36 @@ func (service *FundService) GetFundsIssueAndCancelData(comparisonDays *int, regN
 			return nil, err
 		}
 	}
-
+	if comparisonDays != nil {
+		slicedData := issueAndCancelData[:*comparisonDays]
+		return &slicedData, nil
+	}
 	return &issueAndCancelData, nil
 }
+
+func calculateIssueAndCancelSum(issueAndCancelData *[]structs.IssueAndCancelData, issueNav float64, cancelNav float64) (*structs.IssueAndCancelSum, error) {
+	if issueNav == 0 {
+		return nil, errors.New("issueNav cannot be zero")
+	}
+	if cancelNav == 0 {
+		return nil, errors.New("cancelNav cannot be zero")
+	}
+	var issueCountSum int
+	var cancelCountSum int
+	for _, dt := range *issueAndCancelData {
+		issueCountSum = issueCountSum + dt.UnitsSubDAY
+		cancelCountSum = cancelCountSum + dt.UnitsRedDAY
+	}
+	issueValue := float64(issueCountSum) * issueNav
+	cancelValue := float64(cancelCountSum) * cancelNav
+	issueAndCancelSum := structs.IssueAndCancelSum{
+		UnitsSubDAYSum: issueCountSum,
+		UnitsRedDAYSum: cancelCountSum,
+		Profit:         issueValue - cancelValue,
+	}
+	return &issueAndCancelSum, nil
+}
+
 func getComparisonFunds(service *FundService, queryList *dto.FundListQuery) (currentDateFunds *[]structs.Fund, compareDateFunds *[]structs.Fund, err error) {
 	baseUrl, err := url.Parse(baseURL)
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
@@ -152,7 +180,6 @@ func (service *FundService) GetFunds(queryList *dto.FundListQuery) (*[]structs.C
 				RankDiff:            rankDiff,
 				NetAssetDiff:        netAssetDiff,
 				NetAssetDiffPercent: netAssetDiffPercent,
-				//ProfitDiff: fund.CancelNav /
 			})
 		}
 	}

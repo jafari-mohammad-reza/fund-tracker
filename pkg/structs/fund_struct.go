@@ -68,7 +68,7 @@ type CalculatedFund struct {
 	RankDiff            int     `json:"rankDiff"`
 	NetAssetDiff        float64 `json:"netAssetDiff"`
 	NetAssetDiffPercent float64 `json:"netAssetDiffPercent"`
-	ProfitDiff          float64 `json:"profitDiff"`
+	IssueAndCancelSum
 }
 
 type IssueAndCancelData struct {
@@ -78,7 +78,8 @@ type IssueAndCancelData struct {
 	UnitsRedDAY int    `json:"unitsRedDAY"`
 }
 
-type IssueAndCancelResponse struct {
-	UnitsSubDAY int `json:"unitsSubDAY"`
-	UnitsRedDAY int `json:"unitsRedDAY"`
+type IssueAndCancelSum struct {
+	UnitsSubDAYSum int     `json:"unitsSubDAYSum"`
+	UnitsRedDAYSum int     `json:"unitsRedDAYSum"`
+	Profit         float64 `json:"profit"`
 }
