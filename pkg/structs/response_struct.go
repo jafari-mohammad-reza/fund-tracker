@@ -5,7 +5,18 @@ type JsonResponse struct {
 	Body       JsonResponseBody `json:"body"`
 }
 type JsonResponseBody struct {
-	StatusCode int          `json:"status_code"`
-	Success    bool         `json:"success"`
-	data       *interface{} `json:"data"`
+	StatusCode int  `json:"status_code"`
+	Success    bool `json:"success"`
+	Data       any  `json:"data"`
+}
+
+func NewJsonResponse(status int, success bool, data any) *JsonResponse {
+	return &JsonResponse{
+		StatusCode: status,
+		Body: JsonResponseBody{
+			StatusCode: status,
+			Success:    success,
+			Data:       data,
+		},
+	}
 }

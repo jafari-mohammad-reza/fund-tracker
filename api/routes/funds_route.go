@@ -7,6 +7,7 @@ import (
 
 func FundsRoute(router fiber.Router) {
 	controller := controllers.NewFuncController()
+
 	funds := router.Group("/funds")
 	// Return all funds with compare date of 1 with ranking and complete data like the count of cancel and issues
 	funds.Get("/", controller.GetFunds)

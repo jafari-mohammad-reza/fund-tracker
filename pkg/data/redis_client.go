@@ -3,8 +3,8 @@ package data
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/redis/go-redis/v9"
+	"log"
 	"os"
 	"strconv"
 	"time"
@@ -14,8 +14,8 @@ var redisClient *redis.Client
 
 func SetupRedisClient() error {
 
-	redisHost, _ := strconv.Atoi(os.Getenv("REDIS_HOST"))
-	redisPort, _ := strconv.Atoi(os.Getenv("REDIS_PORT"))
+	//redisHost := os.Getenv("REDIS_HOST")
+	//redisPort := os.Getenv("REDIS_PORT")
 	redisDialTimeout, _ := strconv.Atoi(os.Getenv("REDIS_DIAL_TIMEOUT"))
 	redisReadTimeout, _ := strconv.Atoi(os.Getenv("REDIS_READ_TIMEOUT"))
 	redisWriteTimeout, _ := strconv.Atoi(os.Getenv("REDIS_WRITE_TIMEOUT"))
@@ -23,7 +23,7 @@ func SetupRedisClient() error {
 	redisPoolTimeout, _ := strconv.Atoi(os.Getenv("REDIS_POOL_TIMEOUT"))
 
 	redisClient = redis.NewClient(&redis.Options{
-		Addr:         fmt.Sprintf("%s:%s", redisHost, redisPort),
+		Addr:         "127.0.0.1:6380",
 		DB:           0,
 		DialTimeout:  time.Duration(redisDialTimeout) * time.Second,
 		ReadTimeout:  time.Duration(redisReadTimeout) * time.Second,
@@ -39,24 +39,49 @@ func CloseRedisClient() {
 func GetRedisClient() *redis.Client {
 	return redisClient
 }
-func SetValue[T any](ctx context.Context, client *redis.Client, key string, value T, duration time.Duration) error {
-	jsonValue, err := json.Marshal(value)
-	if err != nil {
-		return err
-	}
-	client.Set(ctx, key, jsonValue, duration)
+func SetValue(ctx context.Context, client *redis.Client, key string, value []byte, duration time.Duration) error {
+	client.Set(ctx, key, value, duration)
 	return nil
 }
-
-func GetValue[T any](ctx context.Context, client *redis.Client, key string) (T, error) {
-	dest := *new(T)
+func GetValue(ctx context.Context, client *redis.Client, key string) (string, error) {
 	cachedData, err := client.Get(ctx, key).Result()
 	if err != nil {
-		return dest, err
+		return "", err
 	}
-	err = json.Unmarshal([]byte(cachedData), &dest)
+	return cachedData, nil
+}
+
+func GetDataFromCacheOrFetch[T any](fetchFunc func() (*T, error), key string, ctx context.Context, redisClient *redis.Client) (*T, error) {
+	dataStr, err := GetValue(ctx, redisClient, key)
 	if err != nil {
-		return dest, err
+		if err != redis.Nil {
+			// Some error occurred while fetching from Redis, but not because the key is not found
+			return nil, err
+		}
+		// The key is not found in Redis, fetch the data using the provided fetch function
+		responseData, err := fetchFunc()
+		if err != nil {
+			return nil, err
+		}
+		// Set the fetched data in Redis
+		dataJSON, err := json.Marshal(responseData)
+		if err != nil {
+			log.Printf("Error marshalling data: %v\n", err)
+		} else {
+			err := SetValue(ctx, redisClient, key, dataJSON, time.Hour*3)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return responseData, nil
+	} else {
+		// Key found in Redis, unmarshal the data
+		var responseData T
+		err := json.Unmarshal([]byte(dataStr), &responseData)
+		if err != nil {
+			log.Printf("Error unmarshalling data: %v\n", err)
+			return nil, err
+		}
+		return &responseData, nil
 	}
-	return dest, nil
 }

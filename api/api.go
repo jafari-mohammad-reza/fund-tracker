@@ -2,11 +2,16 @@ package api
 
 import (
 	"fmt"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
 	"github.com/jafari-mohammad-reza/fund-tracker/api/routes"
+	"github.com/jafari-mohammad-reza/fund-tracker/pkg/errors"
+
 	"os"
 	"time"
+
+	_ "github.com/jafari-mohammad-reza/fund-tracker/docs"
 )
 
 func NewServer() {
@@ -21,9 +26,7 @@ func NewServer() {
 		AppName:           "Fund tracker v1.0.0",
 		EnablePrintRoutes: printRoute,
 		ReadTimeout:       time.Second * 10,
-		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
-		},
+		ErrorHandler:      errors.ErrorHandler,
 	})
 	setupRoutes(app)
 	setupSwagger(app)
@@ -53,9 +56,5 @@ func setupRoutes(app *fiber.App) {
 // @host localhost:5000
 // @BasePath /
 func setupSwagger(app *fiber.App) {
-	app.Get("/api-docs/*", swagger.New(swagger.Config{
-		InstanceName: "Fund Tracker",
-		Title:        "Fund Tracker",
-		URL:          os.Getenv("APP_URL"),
-	}))
+	app.Get("/swagger/*", swagger.HandlerDefault)
 }
