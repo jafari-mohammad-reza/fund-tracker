@@ -51,10 +51,6 @@ type Fund struct {
 	Commodity                 *float64 `json:"commodity"`
 	FundPublisher             int      `json:"fundPublisher"`
 	FundWatch                 *bool    `json:"fundWatch"`
-	Rank                      *int     `json:"rank"`
-	RankDiff                  *int     `json:"RankDiff"`
-	AumDiff                   *float64 `json:"aumDiff"`
-	AumDiffPercent            *float32 `json:"aumDiff"`
 }
 
 type FipIranResponse struct {
@@ -72,4 +68,5 @@ type CalculatedFund struct {
 	RankDiff            int     `json:"rankDiff"`
 	NetAssetDiff        float64 `json:"netAssetDiff"`
 	NetAssetDiffPercent float64 `json:"netAssetDiffPercent"`
+	ProfitDiff          float64 `json:"profitDiff"`
 }

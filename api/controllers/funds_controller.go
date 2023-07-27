@@ -65,21 +65,6 @@ func getQueryListQueries(ctx *fiber.Ctx) *dto.FundListQuery {
 		fundListQuery.RankBy = &defaultValue
 	}
 
-	if fundType, ok := queryList["fundType"]; ok {
-		fundTypeIntSlice := []int{}
-		fundTypeValues := strings.Split(fundType, ",")
-		for _, value := range fundTypeValues {
-			if intValue, err := strconv.Atoi(value); err == nil {
-				fundTypeIntSlice = append(fundTypeIntSlice, intValue)
-			}
-		}
-		fundListQuery.FundType = &fundTypeIntSlice
-	} else {
-		// Set default value for FundType (an empty slice in this case)
-		defaultValue := []int{}
-		fundListQuery.FundType = &defaultValue
-	}
-
 	return &fundListQuery
 }
 
