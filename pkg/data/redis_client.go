@@ -51,7 +51,7 @@ func GetValue(ctx context.Context, client *redis.Client, key string) (string, er
 	return cachedData, nil
 }
 
-func GetDataFromCacheOrFetch[T any](fetchFunc func() (*T, error), key string, ctx context.Context, redisClient *redis.Client) (*T, error) {
+func GetDataFromCacheOrFetch[T any](fetchFunc func() (*T, error), key string, ctx context.Context, redisClient *redis.Client, cacheDuration time.Duration) (*T, error) {
 	dataStr, err := GetValue(ctx, redisClient, key)
 	if err != nil {
 		if err != redis.Nil {
@@ -68,7 +68,7 @@ func GetDataFromCacheOrFetch[T any](fetchFunc func() (*T, error), key string, ct
 		if err != nil {
 			log.Printf("Error marshalling data: %v\n", err)
 		} else {
-			err := SetValue(ctx, redisClient, key, dataJSON, time.Hour*3)
+			err := SetValue(ctx, redisClient, key, dataJSON, cacheDuration)
 			if err != nil {
 				return nil, err
 			}

@@ -11,6 +11,7 @@ func FundsRoute(router fiber.Router) {
 	funds := router.Group("/funds")
 	// Return all funds with compare date of 1 with ranking and complete data like the count of cancel and issues
 	funds.Get("/", controller.GetFunds)
+	funds.Get("/asset-chart/:regNo", controller.GetFundsIssueAndCancelData)
 	// Return all funds managers with complete data
 	funds.Get("/managers", controller.GetManagers)
 	// Return given regNo fund with cancel and issue count and efficiency chart and portfo data

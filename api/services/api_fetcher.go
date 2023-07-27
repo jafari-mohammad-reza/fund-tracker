@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 )
 
@@ -26,7 +25,7 @@ type FetchResult struct {
 	Error  error
 }
 
-func (service *ApiFetcherService) FetchApiBytes(api string, params *string, queries *string) <-chan FetchResult {
+func (service *ApiFetcherService) FetchApiBytes(api string, headers *map[string]string) <-chan FetchResult {
 	ch := make(chan FetchResult)
 
 	go func() {
@@ -37,18 +36,16 @@ func (service *ApiFetcherService) FetchApiBytes(api string, params *string, quer
 			ch <- FetchResult{nil, err}
 			return
 		}
-		if params != nil {
-			newUrl.JoinPath(*params)
-		}
-		if queries != nil {
-			queryList := strings.Split(*queries, "&")
-			for _, queryItem := range queryList {
-				query := strings.Split(queryItem, "=")
-				newUrl.Query().Set(query[0], query[1])
+
+		req, err := http.NewRequest("GET", newUrl.String(), nil)
+
+		if headers != nil {
+			for key, value := range *headers {
+
+				req.Header.Set(key, value)
 			}
 		}
 
-		req, err := http.NewRequest("GET", newUrl.String(), nil)
 		if err != nil {
 			ch <- FetchResult{nil, err}
 			return

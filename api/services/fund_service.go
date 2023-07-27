@@ -1,6 +1,7 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -14,6 +15,12 @@ import (
 	"net/url"
 	"strconv"
 	"time"
+)
+
+const (
+	baseURL           = "https://fund.fipiran.ir/api/v1/fund/fundcompare"
+	fundAssetChartUrl = "https://fund.fipiran.ir/api/v1/chart/getfundnetassetchart"
+	refererURL        = "https://fund.fipiran.ir/mf/profile"
 )
 
 type FundService struct {
@@ -30,7 +37,7 @@ func NewFundService() *FundService {
 	}
 }
 func (service *FundService) fetchFunds(url string) (*structs.FipIranResponse, error) {
-	fundsChannel := service.apiFetcherService.FetchApiBytes(url, nil, nil)
+	fundsChannel := service.apiFetcherService.FetchApiBytes(url, nil)
 	var responseData structs.FipIranResponse
 	for res := range fundsChannel {
 		if res.Error != nil {
@@ -38,7 +45,8 @@ func (service *FundService) fetchFunds(url string) (*structs.FipIranResponse, er
 			return nil, res.Error
 		}
 
-		err := json.Unmarshal(res.Result, &responseData)
+		err := json.NewDecoder(bytes.NewBuffer(res.Result)).Decode(&responseData)
+
 		if err != nil {
 			log.Printf("Error unmarshalling data: %v\n", err)
 			return nil, err
@@ -47,8 +55,30 @@ func (service *FundService) fetchFunds(url string) (*structs.FipIranResponse, er
 
 	return &responseData, nil
 }
+
+func (service *FundService) GetFundsIssueAndCancelData(comparisonDays *int, regNo string) (issueAndCancel *[]structs.IssueAndCancelData, err error) {
+	baseUrl, err := url.Parse(fmt.Sprintf("%s?regno=%s", fundAssetChartUrl, regNo))
+	headers := make(map[string]string)
+	headers["Referer"] = fmt.Sprintf("%s/%s", refererURL, regNo)
+
+	response := service.apiFetcherService.FetchApiBytes(baseUrl.String(), &headers)
+	var issueAndCancelData []structs.IssueAndCancelData
+	for res := range response {
+
+		if res.Error != nil {
+			return nil, res.Error
+		}
+
+		err := json.NewDecoder(bytes.NewBuffer(res.Result)).Decode(&issueAndCancelData)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &issueAndCancelData, nil
+}
 func getComparisonFunds(service *FundService, queryList *dto.FundListQuery) (currentDateFunds *[]structs.Fund, compareDateFunds *[]structs.Fund, err error) {
-	baseUrl, err := url.Parse("https://fund.fipiran.ir/api/v1/fund/fundcompare")
+	baseUrl, err := url.Parse(baseURL)
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
 
 	if err != nil {
@@ -68,8 +98,8 @@ func getComparisonFunds(service *FundService, queryList *dto.FundListQuery) (cur
 		"fipiran-funds",
 		ctx,
 		service.redisClient,
+		time.Hour*3,
 	)
-
 	if err != nil {
 		return nil, nil, err
 	}
@@ -88,8 +118,8 @@ func getComparisonFunds(service *FundService, queryList *dto.FundListQuery) (cur
 		"fipiran-funds"+"-"+strconv.Itoa(*queryList.CompareDate)+"-"+*queryList.RankBy,
 		ctx,
 		service.redisClient,
+		time.Hour*3,
 	)
-	go service.redisClient.Set(ctx, fmt.Sprintf("%s-%d", "fipiran-funds", queryList.CompareDate), previousDayResponseData, time.Hour*3)
 	utils.SortResponseDataItems(responseData.Items, *queryList.RankBy)
 	utils.SortResponseDataItems(previousDayResponseData.Items, *queryList.RankBy)
 	if err != nil {
