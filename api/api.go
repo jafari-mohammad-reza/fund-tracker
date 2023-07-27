@@ -46,6 +46,7 @@ func setupRoutes(app *fiber.App) {
 		return ctx.SendStatus(200)
 	})
 	routes.FundsRoute(v1)
+	routes.ManagersRouter(v1)
 }
 
 // @title Fund Tracker

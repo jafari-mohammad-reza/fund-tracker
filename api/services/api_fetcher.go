@@ -4,7 +4,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
+)
+
+var (
+	once       sync.Once
+	httpClient *http.Client
 )
 
 type ApiFetcherService struct {
@@ -12,9 +18,12 @@ type ApiFetcherService struct {
 }
 
 func NewApiFetcher() *ApiFetcherService {
-	httpClient := &http.Client{
-		Timeout: 6 * time.Second,
-	}
+	once.Do(func() {
+		httpClient = &http.Client{
+			Timeout: 6 * time.Second,
+		}
+	})
+
 	return &ApiFetcherService{
 		httpClient: httpClient,
 	}
