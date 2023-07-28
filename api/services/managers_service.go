@@ -1,11 +1,14 @@
 package services
 
 import (
+	"context"
+	"encoding/json"
 	"github.com/jafari-mohammad-reza/fund-tracker/api/dto"
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/data"
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/structs"
 	"github.com/redis/go-redis/v9"
 	"strings"
+	"time"
 )
 
 type ManagersService struct {
@@ -25,7 +28,19 @@ func NewManagersService() *ManagersService {
 	}
 }
 
-func (service *ManagersService) GetManagersListWithFunds(queryList *dto.FundListQuery) (*[]structs.ManagerListResponse, error) {
+func (service *ManagersService) GetManagersListWithFunds(ctx context.Context, queryList *dto.FundListQuery) (*[]structs.ManagerListResponse, error) {
+	var response []structs.ManagerListResponse
+	existData, err := data.GetValue(ctx, service.redisClient, "managers")
+	if err != nil && err != redis.Nil {
+		return nil, err
+	}
+	if existData != "" {
+		err := json.Unmarshal([]byte(existData), &response)
+		if err != nil {
+			return nil, err
+		}
+		return &response, nil
+	}
 	calculatedFunds, err := service.fundService.GetFunds(queryList)
 	if err != nil {
 		return nil, err
@@ -83,6 +98,10 @@ func (service *ManagersService) GetManagersListWithFunds(queryList *dto.FundList
 		manager.Items.Rank /= numFunds
 		managerList = append(managerList, *manager)
 	}
-
+	dataJSON, err := json.Marshal(managerList)
+	err = data.SetValue(ctx, service.redisClient, "managers", dataJSON, time.Hour*12)
+	if err != nil {
+		return nil, err
+	}
 	return &managerList, nil
 }
