@@ -82,7 +82,7 @@ func (service *FundService) GetFundsIssueAndCancelData(comparisonDays *int, regN
 	return &issueAndCancelData, nil
 }
 
-func calculateIssueAndCancelSum(issueAndCancelData *[]structs.IssueAndCancelData, issueNav float64, cancelNav float64) (*structs.IssueAndCancelSum, error) {
+func (service *FundService) CalculateIssueAndCancelSum(issueAndCancelData *[]structs.IssueAndCancelData, issueNav float64, cancelNav float64) (*structs.IssueAndCancelSum, error) {
 	if issueNav == 0 {
 		return nil, errors.New("issueNav cannot be zero")
 	}

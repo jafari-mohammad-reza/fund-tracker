@@ -3,10 +3,12 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/jafari-mohammad-reza/fund-tracker/api/dto"
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/data"
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/structs"
 	"github.com/redis/go-redis/v9"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -104,4 +106,45 @@ func (service *ManagersService) GetManagersListWithFunds(ctx context.Context, qu
 		return nil, err
 	}
 	return &managerList, nil
+}
+
+func (service *ManagersService) GetManagerInfo(ctx context.Context, query *dto.ManagerInfoQuery) (*structs.ManagerInfoResponse, error) {
+	managersList, err := service.GetManagersListWithFunds(ctx, query.FundListQuery)
+	//var response structs.ManagerInfoResponse
+	if err != nil {
+		return nil, err
+	}
+	var manager structs.ManagerListResponse
+	for _, mn := range *managersList {
+		pattern := regexp.MustCompile(query.ManagerName)
+		// Check if mn.Manager matches the pattern
+		if pattern.MatchString(mn.Manager) {
+			manager = mn
+		}
+	}
+
+	if manager.Funds == nil {
+		return nil, errors.New("No funds found for the manager")
+	}
+	issueAndCancelSum := structs.IssueAndCancelSum{
+		UnitsSubDAYSum: 0,
+		UnitsRedDAYSum: 0,
+		Profit:         0,
+	}
+
+	for _, fund := range *manager.Funds {
+		issueAndCancelData, err := service.fundService.GetFundsIssueAndCancelData(query.FundListQuery.CompareDate, fund.RegNo)
+		issueAndCancelDataSum, err := service.fundService.CalculateIssueAndCancelSum(issueAndCancelData, fund.IssueNav, fund.CancelNav)
+		if err != nil {
+			continue
+		}
+		issueAndCancelSum.UnitsSubDAYSum = issueAndCancelSum.UnitsSubDAYSum + issueAndCancelDataSum.UnitsSubDAYSum
+		issueAndCancelSum.UnitsRedDAYSum = issueAndCancelSum.UnitsRedDAYSum + issueAndCancelDataSum.UnitsRedDAYSum
+		issueAndCancelSum.Profit = issueAndCancelSum.Profit + issueAndCancelDataSum.Profit
+	}
+
+	return &structs.ManagerInfoResponse{
+		ManagerListResponse: manager,
+		IssueAndCancelSum:   issueAndCancelSum,
+	}, nil
 }

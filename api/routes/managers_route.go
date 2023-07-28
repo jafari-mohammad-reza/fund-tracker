@@ -9,4 +9,5 @@ func ManagersRouter(router fiber.Router) {
 	controller := controllers.NewManagersController()
 	managers := router.Group("/managers")
 	managers.Get("/", controller.GetManagersList)
+	managers.Get("/info", controller.GetManagerInfo)
 }

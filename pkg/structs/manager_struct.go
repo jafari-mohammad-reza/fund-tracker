@@ -12,3 +12,8 @@ type ManagerListResponse struct {
 	Funds   *[]CalculatedFund `json:"funds"`
 	Items   ManagerListItems  `json:"Items"`
 }
+
+type ManagerInfoResponse struct {
+	ManagerListResponse
+	IssueAndCancelSum
+}
