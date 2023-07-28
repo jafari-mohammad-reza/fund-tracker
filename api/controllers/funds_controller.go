@@ -21,7 +21,7 @@ func NewFuncController() *FundController {
 }
 
 func (controller *FundController) GetFunds(ctx *fiber.Ctx) error {
-	queryList := getQueryListQueries(ctx)
+	queryList := GetQueryListQueries(ctx)
 	funds, err := controller.service.GetFunds(queryList)
 	if err != nil {
 		ctx.Status(500).JSON(structs.NewJsonResponse(500, false, "failed to fetch funds"))
@@ -34,7 +34,7 @@ func (controller *FundController) GetFunds(ctx *fiber.Ctx) error {
 
 func (controller FundController) GetFundsIssueAndCancelData(ctx *fiber.Ctx) error {
 	regNo := ctx.Params("regNo")
-	queryList := getQueryListQueries(ctx)
+	queryList := GetQueryListQueries(ctx)
 	if regNo == "" {
 		ctx.Status(400).JSON(structs.NewJsonResponse(400, false, "Insert regNo"))
 	}
@@ -48,7 +48,7 @@ func (controller FundController) GetFundsIssueAndCancelData(ctx *fiber.Ctx) erro
 	return nil
 }
 
-func getQueryListQueries(ctx *fiber.Ctx) *dto.FundListQuery {
+func GetQueryListQueries(ctx *fiber.Ctx) *dto.FundListQuery {
 	queryString := string(ctx.Request().URI().QueryString())
 	queryList := make(map[string]string)
 

@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jafari-mohammad-reza/fund-tracker/api/services"
+	"github.com/jafari-mohammad-reza/fund-tracker/pkg/structs"
 )
 
 type ManagersController struct {
@@ -17,5 +18,12 @@ func NewManagersController() *ManagersController {
 }
 
 func (controller *ManagersController) GetManagersList(ctx *fiber.Ctx) error {
+	fundQuery := GetQueryListQueries(ctx)
+	managersList, err := controller.service.GetManagersListWithFunds(fundQuery)
+	if err != nil {
+		ctx.Status(500).JSON(structs.NewJsonResponse(500, false, "failed to fetch managers"))
+		return err
+	}
+	ctx.Status(200).JSON(structs.NewJsonResponse(200, true, managersList))
 	return nil
 }
