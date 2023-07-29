@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/jafari-mohammad-reza/fund-tracker/api/dto"
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/data"
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/structs"
@@ -27,14 +26,17 @@ const (
 type FundService struct {
 	redisClient       *redis.Client
 	apiFetcherService *ApiFetcherService
+	fundInfoService   *FundInfoService
 }
 
 func NewFundService() *FundService {
 	redisClient := data.GetRedisClient()
 	apiFetcherService := NewApiFetcher()
+	fundInfoService := NewFundInfoService()
 	return &FundService{
-		redisClient:       redisClient,
-		apiFetcherService: apiFetcherService,
+		redisClient,
+		apiFetcherService,
+		fundInfoService,
 	}
 }
 func (service *FundService) fetchFunds(url string) (*structs.FipIranResponse, error) {
@@ -55,31 +57,6 @@ func (service *FundService) fetchFunds(url string) (*structs.FipIranResponse, er
 	}
 
 	return &responseData, nil
-}
-
-func (service *FundService) GetFundsIssueAndCancelData(comparisonDays *int, regNo string) (issueAndCancel *[]structs.IssueAndCancelData, err error) {
-	baseUrl, err := url.Parse(fmt.Sprintf("%s?regno=%s", fundAssetChartUrl, regNo))
-	headers := make(map[string]string)
-	headers["Referer"] = fmt.Sprintf("%s/%s", refererURL, regNo)
-
-	response := service.apiFetcherService.FetchApiBytes(baseUrl.String(), &headers)
-	var issueAndCancelData []structs.IssueAndCancelData
-	for res := range response {
-
-		if res.Error != nil {
-			return nil, res.Error
-		}
-
-		err := json.NewDecoder(bytes.NewBuffer(res.Result)).Decode(&issueAndCancelData)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if comparisonDays != nil {
-		slicedData := issueAndCancelData[:*comparisonDays]
-		return &slicedData, nil
-	}
-	return &issueAndCancelData, nil
 }
 
 func (service *FundService) CalculateIssueAndCancelSum(issueAndCancelData *[]structs.IssueAndCancelData, issueNav float64, cancelNav float64) (*structs.IssueAndCancelSum, error) {

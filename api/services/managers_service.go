@@ -133,7 +133,7 @@ func (service *ManagersService) GetManagerInfo(ctx context.Context, query *dto.M
 	}
 
 	for _, fund := range *manager.Funds {
-		issueAndCancelData, err := service.fundService.GetFundsIssueAndCancelData(query.FundListQuery.CompareDate, fund.RegNo)
+		issueAndCancelData, err := service.fundService.fundInfoService.GetFundsIssueAndCancelData(query.FundListQuery.CompareDate, fund.RegNo)
 		issueAndCancelDataSum, err := service.fundService.CalculateIssueAndCancelSum(issueAndCancelData, fund.IssueNav, fund.CancelNav)
 		if err != nil {
 			continue
