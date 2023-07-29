@@ -44,3 +44,6 @@ func (service *FundInfoService) GetFundsIssueAndCancelData(comparisonDays *int, 
 	}
 	return &issueAndCancelData, nil
 }
+func (service *FundInfoService) GetFundInfo(date *string) (any, error) {
+	return nil, nil
+}

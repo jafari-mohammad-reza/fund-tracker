@@ -10,19 +10,22 @@ import (
 )
 
 type FundController struct {
-	service *services.FundService
+	fundService     *services.FundService
+	fundInfoService *services.FundInfoService
 }
 
 func NewFuncController() *FundController {
 	fundService := services.NewFundService()
+	fundInfoService := services.NewFundInfoService()
 	return &FundController{
-		service: fundService,
+		fundService,
+		fundInfoService,
 	}
 }
 
 func (controller *FundController) GetFunds(ctx *fiber.Ctx) error {
 	queryList := GetQueryListQueries(ctx)
-	funds, err := controller.service.GetFunds(queryList)
+	funds, err := controller.fundService.GetFunds(queryList)
 	if err != nil {
 		ctx.Status(500).JSON(structs.NewJsonResponse(500, false, "failed to fetch funds"))
 		return err
@@ -38,7 +41,7 @@ func (controller FundController) GetFundsIssueAndCancelData(ctx *fiber.Ctx) erro
 	if regNo == "" {
 		ctx.Status(400).JSON(structs.NewJsonResponse(400, false, "Insert regNo"))
 	}
-	issueAndCancelData, err := controller.service.GetFundsIssueAndCancelData(queryList.CompareDate, regNo)
+	issueAndCancelData, err := controller.fundInfoService.GetFundsIssueAndCancelData(queryList.CompareDate, regNo)
 	if err != nil {
 		ctx.Status(500).JSON(structs.NewJsonResponse(500, false, "failed to fetch fund issue and cancel data"))
 		return err
@@ -84,10 +87,13 @@ func GetQueryListQueries(ctx *fiber.Ctx) *dto.FundListQuery {
 	return &fundListQuery
 }
 
-func (controller *FundController) GetManagers(ctx *fiber.Ctx) error {
-	return nil
-}
-
 func (controller *FundController) GetFundInfo(ctx *fiber.Ctx) error {
+	date := ctx.Get("date")
+	info, err := controller.fundInfoService.GetFundInfo(&date)
+	if err != nil {
+		ctx.Status(500).JSON(structs.NewJsonResponse(500, false, "failed to fetch fund info"))
+		return err
+	}
+	ctx.Status(200).JSON(structs.NewJsonResponse(200, true, info))
 	return nil
 }
