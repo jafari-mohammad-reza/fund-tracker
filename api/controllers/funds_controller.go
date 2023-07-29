@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jafari-mohammad-reza/fund-tracker/api/dto"
 	"github.com/jafari-mohammad-reza/fund-tracker/api/services"
@@ -88,8 +89,12 @@ func GetQueryListQueries(ctx *fiber.Ctx) *dto.FundListQuery {
 }
 
 func (controller *FundController) GetFundInfo(ctx *fiber.Ctx) error {
-	date := ctx.Get("date")
-	info, err := controller.fundInfoService.GetFundInfo(&date)
+	regNo := ctx.Params("regNo")
+	if regNo == "" {
+		ctx.Status(500).JSON(structs.NewJsonResponse(500, false, "invalid regno"))
+		return errors.New("invalid regno")
+	}
+	info, err := controller.fundInfoService.GetFundInfo(regNo)
 	if err != nil {
 		ctx.Status(500).JSON(structs.NewJsonResponse(500, false, "failed to fetch fund info"))
 		return err

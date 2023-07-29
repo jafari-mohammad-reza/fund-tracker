@@ -13,7 +13,7 @@ func FundsRoute(router fiber.Router) {
 	funds.Get("/", controller.GetFunds)
 	funds.Get("/asset-chart/:regNo", controller.GetFundsIssueAndCancelData)
 	// Return given regNo fund with cancel and issue count and efficiency chart and portfo data
-	funds.Get("/fund/:regNo", controller.GetFundInfo)
+	funds.Get("/info/:regNo", controller.GetFundInfo)
 }
 
 // TODO: add below features as well

@@ -22,10 +22,16 @@ type FundEfficiency struct {
 	AnnualEfficiency    float64 `json:"annualEfficiency"`
 }
 
+type FundBasicInfo struct {
+	Status  int    `json:"status"`
+	Message string `json:"message"`
+	Item    Fund   `json:"item"`
+}
+
 type FundInfo struct {
-	Fund           `json:"fund-basic-info"`
-	FundEfficiency `json:"fund-efficiency"`
-	FundPortfolio  `json:"fund-portfolio"`
+	Fund           Fund             `json:"fund-basic-info"`
+	FundEfficiency []FundEfficiency `json:"fund-efficiency"`
+	FundPortfolio  []FundPortfolio  `json:"fund-portfolio"`
 }
 
 type IssueAndCancelData struct {
