@@ -18,9 +18,8 @@ import (
 )
 
 const (
-	baseURL           = "https://fund.fipiran.ir/api/v1/fund/fundcompare"
-	fundAssetChartUrl = "https://fund.fipiran.ir/api/v1/chart/getfundnetassetchart"
-	refererURL        = "https://fund.fipiran.ir/mf/profile"
+	baseURL    = "https://fund.fipiran.ir/api/v1/fund/fundcompare"
+	refererURL = "https://fund.fipiran.ir/mf/profile"
 )
 
 type FundService struct {
@@ -84,10 +83,11 @@ func (service *FundService) CalculateIssueAndCancelSum(issueAndCancelData *[]str
 
 func getComparisonFunds(service *FundService, queryList *dto.FundListQuery) (currentDateFunds *[]structs.Fund, compareDateFunds *[]structs.Fund, err error) {
 	baseUrl, err := url.Parse(baseURL)
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 
 	if err != nil {
 		log.Println("Failed to parse URL: ", err.Error())
+		cancel()
 		return nil, nil, err
 	}
 	fetchFuncWrapper := func() (*structs.FipIranResponse, error) {
@@ -95,6 +95,7 @@ func getComparisonFunds(service *FundService, queryList *dto.FundListQuery) (cur
 		if err != nil {
 			return nil, err
 		}
+		cancel()
 		return responseData, nil
 	}
 

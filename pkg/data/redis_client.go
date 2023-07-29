@@ -23,7 +23,7 @@ func SetupRedisClient() error {
 	redisPoolTimeout, _ := strconv.Atoi(os.Getenv("REDIS_POOL_TIMEOUT"))
 
 	redisClient = redis.NewClient(&redis.Options{
-		Addr:         "127.0.0.1:6380",
+		Addr:         "127.0.0.1:6379",
 		DB:           0,
 		DialTimeout:  time.Duration(redisDialTimeout) * time.Second,
 		ReadTimeout:  time.Duration(redisReadTimeout) * time.Second,

@@ -10,6 +10,13 @@ import (
 	"net/url"
 )
 
+const (
+	fundAssetChartUrl = "https://fund.fipiran.ir/api/v1/chart/getfundnetassetchart"
+	fundPortfoUrl     = "https://fund.fipiran.ir/api/v1/chart/portfoliochart"
+	fundEfficiencyUrl = "https://fund.fipiran.ir/api/v1/chart/fundefficiencychart"
+	fundBasicInfoUrl  = "https://fund.fipiran.ir/api/v1/fund/getfund"
+)
+
 type FundInfoService struct {
 	redisClient       *redis.Client
 	apiFetcherService *ApiFetcherService
@@ -44,6 +51,18 @@ func (service *FundInfoService) GetFundsIssueAndCancelData(comparisonDays *int, 
 	}
 	return &issueAndCancelData, nil
 }
-func (service *FundInfoService) GetFundInfo(date *string) (any, error) {
+
+func (service *FundInfoService) GetFundPortfo(regNo int) (*[]structs.FundPortfolio, error) {
+	return nil, nil
+}
+func (service *FundInfoService) GetFundEfficiency(regNo int) (*[]structs.FundEfficiency, error) {
+	return nil, nil
+}
+
+func (service *FundInfoService) GetFundBasicInfo(regNo int) (*structs.Fund, error) {
+	return nil, nil
+}
+
+func (service *FundInfoService) GetFundInfo(date *string) (*structs.FundInfo, error) {
 	return nil, nil
 }

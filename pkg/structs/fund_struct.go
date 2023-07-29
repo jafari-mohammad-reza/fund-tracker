@@ -70,16 +70,3 @@ type CalculatedFund struct {
 	NetAssetDiffPercent float64 `json:"netAssetDiffPercent"`
 	IssueAndCancelSum
 }
-
-type IssueAndCancelData struct {
-	Date        string `json:"date" time_format:"2006-01-02T15:04:05"`
-	NetAsset    int64  `json:"netAsset"`
-	UnitsSubDAY int    `json:"unitsSubDAY"`
-	UnitsRedDAY int    `json:"unitsRedDAY"`
-}
-
-type IssueAndCancelSum struct {
-	UnitsSubDAYSum int     `json:"unitsSubDAYSum"`
-	UnitsRedDAYSum int     `json:"unitsRedDAYSum"`
-	Profit         float64 `json:"profit"`
-}
