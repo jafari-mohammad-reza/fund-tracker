@@ -20,7 +20,7 @@ type ApiFetcherService struct {
 func NewApiFetcher() *ApiFetcherService {
 	once.Do(func() {
 		httpClient = &http.Client{
-			Timeout: 6 * time.Second,
+			Timeout: 30 * time.Second,
 		}
 	})
 

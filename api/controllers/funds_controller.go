@@ -2,12 +2,13 @@ package controllers
 
 import (
 	"errors"
+	"strconv"
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/jafari-mohammad-reza/fund-tracker/api/dto"
 	"github.com/jafari-mohammad-reza/fund-tracker/api/services"
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/structs"
-	"strconv"
-	"strings"
 )
 
 type FundController struct {
@@ -100,5 +101,19 @@ func (controller *FundController) GetFundInfo(ctx *fiber.Ctx) error {
 		return err
 	}
 	ctx.Status(200).JSON(structs.NewJsonResponse(200, true, info))
+	return nil
+}
+
+func (controller *FundController) GetNavPerYear(ctx *fiber.Ctx) error {
+	data, err := controller.fundService.GetEachYearFunds()
+	if err != nil {
+		ctx.Status(500).JSON(structs.NewJsonResponse(500, false, "failed to fetch nav per year"))
+		return err
+	}
+	ctx.Status(200).JSON(structs.NewJsonResponse(200, true, data))
+	return nil
+}
+
+func (controller *FundController) GetFundEfficiencyBaseOnMarket(ctx *fiber.Ctx) error {
 	return nil
 }

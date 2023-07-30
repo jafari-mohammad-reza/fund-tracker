@@ -14,10 +14,11 @@ func FundsRoute(router fiber.Router) {
 	funds.Get("/asset-chart/:regNo", controller.GetFundsIssueAndCancelData)
 	// Return given regNo fund with cancel and issue count and efficiency chart and portfo data
 	funds.Get("/info/:regNo", controller.GetFundInfo)
+	//nav-per-year
+	funds.Get("/nav-per-year", controller.GetNavPerYear)
+	// funds efficiency chart in compare of market index
+	funds.Get("/market-efficiency", controller.GetFundEfficiencyBaseOnMarket)
+
 }
 
 // TODO: add below features as well
-//nav-per-year
-// managers with their funds and total nav and sorted by best aum diff
-// top funds of market that has best efficiency in the duration of existence
-// funds efficiency chart in compare of market index

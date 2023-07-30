@@ -5,16 +5,19 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"log"
+	"math"
+	"net/url"
+	"strconv"
+	"sync"
+	"time"
+
 	"github.com/jafari-mohammad-reza/fund-tracker/api/dto"
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/data"
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/structs"
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/utils"
 	"github.com/redis/go-redis/v9"
-	"log"
-	"math"
-	"net/url"
-	"strconv"
-	"time"
 )
 
 const (
@@ -168,4 +171,74 @@ func (service *FundService) GetFunds(queryList *dto.FundListQuery) (*[]structs.C
 		}
 	}
 	return &calculatedFunds, nil
+}
+
+func (service *FundService) GetNavPerYear() {
+
+}
+
+func (service *FundService) GetEachYearFunds() (*[]structs.EachYearFunds, error) {
+	startYear := 2008
+	currentYear := time.Now().Year()
+	yearDiff := (currentYear - startYear) + 1
+
+	eachYearDataMap := make(map[int][]structs.Fund, yearDiff)
+	eachYearFunds := make([]structs.EachYearFunds, 0, yearDiff) // Initialize with length 0, capacity yearDiff
+
+	// Create a channel to communicate the results from the goroutines
+	resChan := make(chan structs.EachYearFunds, yearDiff)
+	// Create a channel to communicate any errors from the goroutines
+	errChan := make(chan error, yearDiff)
+	// Create a WaitGroup to ensure all goroutines complete
+	var wg sync.WaitGroup
+
+	for i := 0; i < yearDiff; i++ {
+		year := startYear + i
+
+		wg.Add(1)
+		go func(year int) {
+			defer wg.Done()
+
+			data, err := service.fetchFunds(fmt.Sprintf("%s?%s=%s", baseURL, "date", year))
+			if err != nil {
+				errChan <- err
+				return
+			}
+			res := structs.EachYearFunds{
+				Year:  year,
+				Funds: data.Items,
+			}
+			resChan <- res
+		}(year)
+	}
+
+	// Wait for all goroutines to complete
+	wg.Wait()
+	// Close the channels
+	close(resChan)
+	close(errChan)
+
+	// Check for any errors
+	if len(errChan) > 0 {
+		return nil, <-errChan
+	}
+
+	// Process results
+	for res := range resChan {
+		eachYearDataMap[res.Year] = append(eachYearDataMap[res.Year], res.Funds...)
+	}
+
+	for year, funds := range eachYearDataMap {
+		yearFunds := structs.EachYearFunds{
+			Year:  year,
+			Funds: funds,
+		}
+		eachYearFunds = append(eachYearFunds, yearFunds)
+	}
+
+	return &eachYearFunds, nil
+}
+
+func (service *FundService) CalculateEachYearTotalNav() {
+
 }

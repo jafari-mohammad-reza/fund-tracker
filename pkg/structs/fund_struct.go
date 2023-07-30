@@ -70,3 +70,8 @@ type CalculatedFund struct {
 	NetAssetDiffPercent float64 `json:"netAssetDiffPercent"`
 	IssueAndCancelSum
 }
+
+type EachYearFunds struct {
+	Year  int    `json:"year"`
+	Funds []Fund `json:"funds"`
+}
