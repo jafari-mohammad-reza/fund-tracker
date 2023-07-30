@@ -105,7 +105,8 @@ func (controller *FundController) GetFundInfo(ctx *fiber.Ctx) error {
 }
 
 func (controller *FundController) GetNavPerYear(ctx *fiber.Ctx) error {
-	data, err := controller.fundService.GetEachYearFunds()
+	data, err := controller.fundService.CalculateEachYearTotalNav()
+
 	if err != nil {
 		ctx.Status(500).JSON(structs.NewJsonResponse(500, false, "failed to fetch nav per year"))
 		return err

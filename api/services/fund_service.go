@@ -173,10 +173,6 @@ func (service *FundService) GetFunds(queryList *dto.FundListQuery) (*[]structs.C
 	return &calculatedFunds, nil
 }
 
-func (service *FundService) GetNavPerYear() {
-
-}
-
 func (service *FundService) GetEachYearFunds() (*[]structs.EachYearFunds, error) {
 	startYear := 2008
 	currentYear := time.Now().Year()
@@ -198,8 +194,8 @@ func (service *FundService) GetEachYearFunds() (*[]structs.EachYearFunds, error)
 		wg.Add(1)
 		go func(year int) {
 			defer wg.Done()
-
-			data, err := service.fetchFunds(fmt.Sprintf("%s?%s=%s", baseURL, "date", year))
+			url := fmt.Sprintf("%s?%s=%s", baseURL, "date", time.Date(year, time.January, 1, 0, 0, 0, 0, time.UTC).Format("2006-01-02"))
+			data, err := service.fetchFunds(url)
 			if err != nil {
 				errChan <- err
 				return
@@ -228,10 +224,10 @@ func (service *FundService) GetEachYearFunds() (*[]structs.EachYearFunds, error)
 		eachYearDataMap[res.Year] = append(eachYearDataMap[res.Year], res.Funds...)
 	}
 
-	for year, funds := range eachYearDataMap {
+	for res := range resChan {
 		yearFunds := structs.EachYearFunds{
-			Year:  year,
-			Funds: funds,
+			Year:  res.Year,
+			Funds: res.Funds,
 		}
 		eachYearFunds = append(eachYearFunds, yearFunds)
 	}
@@ -239,6 +235,36 @@ func (service *FundService) GetEachYearFunds() (*[]structs.EachYearFunds, error)
 	return &eachYearFunds, nil
 }
 
-func (service *FundService) CalculateEachYearTotalNav() {
+func (service *FundService) CalculateEachYearTotalNav() (*[]structs.EachYearNav, error) {
+	eachYearFunds, err := service.GetEachYearFunds()
+	if err != nil {
+		return nil, err
+	}
+	eachYearNav := make([]structs.EachYearNav, 0, len(*eachYearFunds))
+	resChan := make(chan structs.EachYearNav, len(*eachYearFunds))
+	var wg sync.WaitGroup
+	for _, yearFund := range *eachYearFunds {
+		wg.Add(1)
+		go func(yearFund structs.EachYearFunds) {
+			defer wg.Done()
+			var sumNav int64
+			count := len(yearFund.Funds)
+			for _, fund := range yearFund.Funds {
+				sumNav += fund.NetAsset
+			}
+			res := structs.EachYearNav{
+				Year:  yearFund.Year,
+				Nav:   sumNav,
+				Count: count,
+			}
+			resChan <- res
+		}(yearFund)
+	}
+	wg.Wait()
+	defer close(resChan)
+	for res := range resChan {
 
+		eachYearNav = append(eachYearNav, res)
+	}
+	return &eachYearNav, nil
 }

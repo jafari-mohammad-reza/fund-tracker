@@ -75,3 +75,9 @@ type EachYearFunds struct {
 	Year  int    `json:"year"`
 	Funds []Fund `json:"funds"`
 }
+
+type EachYearNav struct {
+	Year  int   `json:"year"`
+	Nav   int64 `json:"nav`
+	Count int   `json:"count"`
+}
