@@ -84,7 +84,7 @@ func (service *FundService) CalculateIssueAndCancelSum(issueAndCancelData *[]str
 func getComparisonFunds(service *FundService, queryList *dto.FundListQuery) (currentDateFunds *[]structs.Fund, compareDateFunds *[]structs.Fund, err error) {
 	baseUrl, err := url.Parse(baseURL)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-
+	defer cancel()
 	if err != nil {
 		log.Println("Failed to parse URL: ", err.Error())
 		cancel()
@@ -95,7 +95,6 @@ func getComparisonFunds(service *FundService, queryList *dto.FundListQuery) (cur
 		if err != nil {
 			return nil, err
 		}
-		cancel()
 		return responseData, nil
 	}
 
@@ -126,6 +125,13 @@ func getComparisonFunds(service *FundService, queryList *dto.FundListQuery) (cur
 		service.redisClient,
 		time.Hour*3,
 	)
+	if err != nil {
+		log.Printf("Error fetching previous day's data: %v\n", err)
+	}
+
+	if responseData == nil || previousDayResponseData == nil {
+		return nil, nil, errors.New("Can not sort empty data")
+	}
 	utils.SortResponseDataItems(responseData.Items, *queryList.RankBy)
 	utils.SortResponseDataItems(previousDayResponseData.Items, *queryList.RankBy)
 	if err != nil {
@@ -144,7 +150,7 @@ func (service *FundService) GetFunds(queryList *dto.FundListQuery) (*[]structs.C
 		previousDayFundsMap[previousDayFunds.RegNo] = i
 	}
 
-	calculatedFunds := make([]structs.CalculatedFund, 0, len(*responseData))
+	var calculatedFunds []structs.CalculatedFund
 	for fundsIndex, fund := range *responseData {
 		previousDayIndex, ok := previousDayFundsMap[fund.RegNo]
 		if ok {
@@ -161,6 +167,5 @@ func (service *FundService) GetFunds(queryList *dto.FundListQuery) (*[]structs.C
 			})
 		}
 	}
-
 	return &calculatedFunds, nil
 }
