@@ -116,5 +116,12 @@ func (controller *FundController) GetNavPerYear(ctx *fiber.Ctx) error {
 }
 
 func (controller *FundController) GetFundEfficiencyBaseOnMarket(ctx *fiber.Ctx) error {
+	data, err := controller.fundInfoService.GetMarketIndexPerYear()
+
+	if err != nil {
+		ctx.Status(500).JSON(structs.NewJsonResponse(500, false, "failed to fetch market efficiency"))
+		return err
+	}
+	ctx.Status(200).JSON(structs.NewJsonResponse(200, true, data))
 	return nil
 }

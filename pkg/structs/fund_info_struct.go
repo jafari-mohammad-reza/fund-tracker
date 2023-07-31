@@ -46,3 +46,14 @@ type IssueAndCancelSum struct {
 	UnitsRedDAYSum int     `json:"unitsRedDAYSum"`
 	Profit         float64 `json:"profit"`
 }
+
+type MarketIndex struct {
+	Name      string `json:"name"`
+	DateIssue int    `json:"dateIssue"`
+	Value     int    `json:"value"`
+}
+
+type TransformedMarketIndex struct {
+	Date  string `json:"date"`
+	Value int    `json:"value"`
+}

@@ -6,8 +6,14 @@ import (
 	"fmt"
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/data"
 	"github.com/jafari-mohammad-reza/fund-tracker/pkg/structs"
+	"github.com/jafari-mohammad-reza/fund-tracker/pkg/utils"
 	"github.com/redis/go-redis/v9"
+	"github.com/tealeg/xlsx"
+	"io/ioutil"
+	"log"
+	"mime/multipart"
 	"net/url"
+	"strconv"
 )
 
 const (
@@ -15,6 +21,7 @@ const (
 	fundPortfoUrl     = "https://fund.fipiran.ir/api/v1/chart/portfoliochart"
 	fundEfficiencyUrl = "https://fund.fipiran.ir/api/v1/chart/fundefficiencychart"
 	fundBasicInfoUrl  = "https://fund.fipiran.ir/api/v1/fund/getfund"
+	marketIndexUrl    = "https://fipiran.ir/DataService/Exportindex"
 )
 
 type FundInfoService struct {
@@ -181,4 +188,85 @@ func (service *FundInfoService) GetFundInfo(regNo string) (*structs.FundInfo, er
 	}
 
 	return fundInfo, nil
+}
+
+func (service *FundInfoService) GetMarketIndexPerYear() (*[]structs.TransformedMarketIndex, error) {
+	body, contentType, err := getMarketIndexBody()
+	fmt.Println(body)
+	if err != nil {
+		return nil, err
+	}
+	headers := make(map[string]string, 1)
+	headers["Content-Type"] = *contentType
+	response := service.apiFetcherService.PostMultipartRequest(marketIndexUrl, &headers, body)
+	var result []byte
+	for res := range response {
+		if res.Error != nil {
+			return nil, res.Error
+		}
+		result = res.Result
+	}
+	fmt.Println(string(result))
+	err = ioutil.WriteFile("test.xlsx", result, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	workbook, err := xlsx.OpenBinary(result)
+	if err != nil {
+		return nil, err
+	}
+
+	sheet := workbook.Sheets[0]
+	items := make([]structs.MarketIndex, 0, len(sheet.Rows))
+	for _, row := range sheet.Rows {
+		var item structs.MarketIndex
+		err = row.ReadStruct(&item)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+
+	transformedDataList := make([]structs.TransformedMarketIndex, 0, len(items))
+	for _, data := range items {
+		transformedData := structs.TransformedMarketIndex{
+			Date:  utils.ShamsiStringToGeoDate(strconv.Itoa(data.DateIssue)),
+			Value: data.Value,
+		}
+		transformedDataList = append(transformedDataList, transformedData)
+	}
+	return &transformedDataList, nil
+}
+
+func getMarketIndexBody() (*bytes.Buffer, *string, error) {
+	body := &bytes.Buffer{}
+	indexEnd, err := utils.CurrentShamsiDateNum()
+	if err != nil {
+		return nil, nil, err
+	}
+	writer := multipart.NewWriter(body)
+	err = writer.WriteField("indexstartDate", "13870914")
+	if err != nil {
+		return nil, nil, err
+	}
+	err = writer.WriteField("indexEnd", *indexEnd)
+	if err != nil {
+		return nil, nil, err
+	}
+	err = writer.WriteField("indexpara", "شاخص+كل")
+	if err != nil {
+		return nil, nil, err
+	}
+	err = writer.WriteField("inscodeindex", "IRX6XTPI0006")
+	if err != nil {
+		return nil, nil, err
+	}
+	err = writer.Close()
+	if err != nil {
+		return nil, nil, err
+	}
+	contentType := writer.FormDataContentType()
+	fmt.Println(contentType)
+	return body, &contentType, nil
 }
