@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"errors"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/jafari-mohammad-reza/fund-tracker/api/dto"
 	"github.com/jafari-mohammad-reza/fund-tracker/api/services"
@@ -20,6 +21,15 @@ func NewManagersController() *ManagersController {
 	}
 }
 
+// GetManagersList godoc
+// @Summary get list of managers
+// @Description get list of managers with their funds
+// @Tags managers
+// @Accept */*
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Router /managers/ [get]
+
 func (controller *ManagersController) GetManagersList(ctx *fiber.Ctx) error {
 	bgCtx := context.Background()
 	fundQuery := GetQueryListQueries(ctx)
@@ -32,6 +42,17 @@ func (controller *ManagersController) GetManagersList(ctx *fiber.Ctx) error {
 	return nil
 }
 
+// GetManagerInfo godoc
+// @Summary Get manager by name
+// @Description Get manager with its funds info
+// @Param compareDate query int false "Comparison date for funds data"
+// @Param rankBy query string false "Ranking criteria for funds data"
+// @Param managerName query string true "Manager name"
+// @Tags managers
+// @Accept */*
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Router /managers/info/ [get]
 func (controller *ManagersController) GetManagerInfo(ctx *fiber.Ctx) error {
 	bgCtx := context.Background()
 	query, err := GetManagerInfoQueryListQueries(ctx)

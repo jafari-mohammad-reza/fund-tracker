@@ -49,13 +49,6 @@ func setupRoutes(app *fiber.App) {
 	routes.ManagersRouter(v1)
 }
 
-// @title Fund Tracker
-// @version 1.0
-// @description fund tracker api documentation
-// @contact.name mohammadreza jafari
-// @contact.email mohammadrezajafari.dev@gmail.com
-// @host localhost:5000
-// @BasePath /
 func setupSwagger(app *fiber.App) {
 	app.Get("/swagger/*", swagger.HandlerDefault)
 }

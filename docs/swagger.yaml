@@ -1,4 +1,127 @@
+basePath: /api/v1
+host: localhost:5000
 info:
-  contact: {}
-paths: {}
+  contact:
+    email: mohammadrezajafari.dev@gmail.com
+    name: Mohammadreza jafari
+    url: http://www.swagger.io/support
+  description: API for retrieving fund market data.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Fund Tracker API
+  version: "1.0"
+paths:
+  /funds/:
+    get:
+      consumes:
+      - '*/*'
+      description: get all funds with compare date of 1 with ranking and complete
+        data like the count of cancel and issues
+      parameters:
+      - description: Comparison date for funds data
+        in: query
+        name: compareDate
+        type: integer
+      - description: Ranking criteria for funds data
+        in: query
+        name: rankBy
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all funds
+      tags:
+      - funds
+  /funds/asset-chart/{regNo}:
+    get:
+      consumes:
+      - '*/*'
+      description: get given regNo fund with cancel and issue count and efficiency
+        chart and portfo data
+      parameters:
+      - description: Fund Registration Number
+        in: path
+        name: regNo
+        required: true
+        type: integer
+      - description: Comparison date for funds data
+        in: query
+        name: compareDate
+        type: integer
+      - description: Ranking criteria for funds data
+        in: query
+        name: rankBy
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get asset chart data for a fund
+      tags:
+      - funds
+  /funds/info/{regNo}:
+    get:
+      consumes:
+      - '*/*'
+      description: get detailed information for a specific fund
+      parameters:
+      - description: Fund Registration Number
+        in: path
+        name: regNo
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get information for a specific fund
+      tags:
+      - funds
+  /managers/info/:
+    get:
+      consumes:
+      - '*/*'
+      description: Get manager with its funds info
+      parameters:
+      - description: Comparison date for funds data
+        in: query
+        name: compareDate
+        type: integer
+      - description: Ranking criteria for funds data
+        in: query
+        name: rankBy
+        type: string
+      - description: Manager name
+        in: query
+        name: managerName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get manager by name
+      tags:
+      - managers
+schemes:
+- http
 swagger: "2.0"

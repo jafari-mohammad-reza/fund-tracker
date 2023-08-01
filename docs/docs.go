@@ -10,22 +10,193 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "Mohammadreza jafari",
+            "url": "http://www.swagger.io/support",
+            "email": "mohammadrezajafari.dev@gmail.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
-    "paths": {}
+    "paths": {
+        "/funds/": {
+            "get": {
+                "description": "get all funds with compare date of 1 with ranking and complete data like the count of cancel and issues",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "funds"
+                ],
+                "summary": "Get all funds",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Comparison date for funds data",
+                        "name": "compareDate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Ranking criteria for funds data",
+                        "name": "rankBy",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/funds/asset-chart/{regNo}": {
+            "get": {
+                "description": "get given regNo fund with cancel and issue count and efficiency chart and portfo data",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "funds"
+                ],
+                "summary": "Get asset chart data for a fund",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Fund Registration Number",
+                        "name": "regNo",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Comparison date for funds data",
+                        "name": "compareDate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Ranking criteria for funds data",
+                        "name": "rankBy",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/funds/info/{regNo}": {
+            "get": {
+                "description": "get detailed information for a specific fund",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "funds"
+                ],
+                "summary": "Get information for a specific fund",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Fund Registration Number",
+                        "name": "regNo",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/managers/info/": {
+            "get": {
+                "description": "Get manager with its funds info",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "managers"
+                ],
+                "summary": "Get manager by name",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Comparison date for funds data",
+                        "name": "compareDate",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Ranking criteria for funds data",
+                        "name": "rankBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Manager name",
+                        "name": "managerName",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        }
+    }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
-	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Version:          "1.0",
+	Host:             "localhost:5000",
+	BasePath:         "/api/v1",
+	Schemes:          []string{"http"},
+	Title:            "Fund Tracker API",
+	Description:      "API for retrieving fund market data.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

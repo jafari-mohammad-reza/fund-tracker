@@ -5,9 +5,7 @@
 ``
 https://github.com/jafari-mohammad-reza/fund-tracker
 ``
-then go to project directory and write 
+then go to project directory and insert 
 ``
 go mod download
-``
-
-contact me in telegram or email if you are intrested in developing this api.
+`` Or ``go mod tidy``

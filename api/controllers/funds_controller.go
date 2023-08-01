@@ -25,6 +25,16 @@ func NewFuncController() *FundController {
 	}
 }
 
+// GetFunds godoc
+// @Summary Get all funds
+// @Description get all funds with compare date of 1 with ranking and complete data like the count of cancel and issues
+// @Tags funds
+// @Accept */*
+// @Produce json
+// @Param compareDate query int false "Comparison date for funds data"
+// @Param rankBy query string false "Ranking criteria for funds data"
+// @Success 200 {object} map[string]interface{}
+// @Router /funds/ [get]
 func (controller *FundController) GetFunds(ctx *fiber.Ctx) error {
 	queryList := GetQueryListQueries(ctx)
 	funds, err := controller.fundService.GetFunds(queryList)
@@ -37,6 +47,17 @@ func (controller *FundController) GetFunds(ctx *fiber.Ctx) error {
 
 }
 
+// GetFundsIssueAndCancelData godoc
+// @Summary Get asset chart data for a fund
+// @Description get given regNo fund with cancel and issue count and efficiency chart and portfo data
+// @Tags funds
+// @Accept */*
+// @Produce json
+// @Param regNo path int true "Fund Registration Number"
+// @Param compareDate query int false "Comparison date for funds data"
+// @Param rankBy query string false "Ranking criteria for funds data"
+// @Success 200 {object} map[string]interface{}
+// @Router /funds/asset-chart/{regNo} [get]
 func (controller FundController) GetFundsIssueAndCancelData(ctx *fiber.Ctx) error {
 	regNo := ctx.Params("regNo")
 	queryList := GetQueryListQueries(ctx)
@@ -89,6 +110,15 @@ func GetQueryListQueries(ctx *fiber.Ctx) *dto.FundListQuery {
 	return &fundListQuery
 }
 
+// GetFundInfo godoc
+// @Summary Get information for a specific fund
+// @Description get detailed information for a specific fund
+// @Tags funds
+// @Accept */*
+// @Produce json
+// @Param regNo path int true "Fund Registration Number"
+// @Success 200 {object} map[string]interface{}
+// @Router /funds/info/{regNo} [get]
 func (controller *FundController) GetFundInfo(ctx *fiber.Ctx) error {
 	regNo := ctx.Params("regNo")
 	if regNo == "" {
@@ -104,22 +134,20 @@ func (controller *FundController) GetFundInfo(ctx *fiber.Ctx) error {
 	return nil
 }
 
+// GetNavPerYear godoc
+// @Summary Get list of each year with that year nav
+// @Description Get list of each year with that year nav
+// @Tags funds
+// @Accept */*
+// @Produce json
+// @Success 200 {object} map[string]interface{}
+// @Router /funds/nav-per-year [get]
+
 func (controller *FundController) GetNavPerYear(ctx *fiber.Ctx) error {
 	data, err := controller.fundService.CalculateEachYearTotalNav()
 
 	if err != nil {
 		ctx.Status(500).JSON(structs.NewJsonResponse(500, false, "failed to fetch nav per year"))
-		return err
-	}
-	ctx.Status(200).JSON(structs.NewJsonResponse(200, true, data))
-	return nil
-}
-
-func (controller *FundController) GetFundEfficiencyBaseOnMarket(ctx *fiber.Ctx) error {
-	data, err := controller.fundInfoService.GetMarketIndexPerYear()
-
-	if err != nil {
-		ctx.Status(500).JSON(structs.NewJsonResponse(500, false, "failed to fetch market efficiency"))
 		return err
 	}
 	ctx.Status(200).JSON(structs.NewJsonResponse(200, true, data))
