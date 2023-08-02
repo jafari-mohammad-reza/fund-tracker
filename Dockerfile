@@ -1,5 +1,5 @@
-FROM golang:1.20.5
-
+FROM golang:1.20.5 as dev
+ENV GOPROXY=https://goproxy.io,direct
 ENV GOPATH /go
 ENV PATH $PATH:$GOPATH/bin
 
@@ -11,8 +11,27 @@ RUN go mod download
 
 COPY . .
 
-RUN go get -u github.com/cespare/reflex
+RUN go install github.com/cespare/reflex@latest
+
 EXPOSE 5000
 
 ENTRYPOINT ["make"]
 CMD ["dev"]
+FROM golang:1.20.5 as prod
+ENV GOPROXY=https://goproxy.io,direct
+ENV GOPATH /go
+ENV PATH $PATH:$GOPATH/bin
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+
+RUN go mod download
+
+COPY . .
+
+
+EXPOSE 5000
+
+ENTRYPOINT ["make"]
+CMD ["run"]
